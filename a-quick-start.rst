@@ -169,10 +169,14 @@ M-x 也对应着命令 execute-extended-command。
     C-t         交换光标前一字符与当前字符，光标移动到下一字符（transpose-chars）
     M-t         交换光标前一单词与当前单词（或下一单词），光标移动到这两个单词之后（transpose-words）
     C-x C-t     交换光标上一行与当前行，光标移动到下一行开头（transpose-lines）
-    C-M-t       
+    C-M-t       交换两个带平衡括号的表达式（transpose-sexps）
     M-x transpose-sentences     交换句子
     M-x transpose-paragraphs    交换段落
-    M-x transpose-regions       交换选择区域
+    M-x transpose-regions       交换选择区域，交换当前选择区域与前一次选择区域的内容
+
+        如果在行尾使用 C-t，它不会将行尾字符与换行符交换（这毫无意义），而是交换行尾的最后两个字符。
+        M-t 会交换光标前后的单词，单词之间的标点符号不会移动。例如 FOO, BAR 会变成 BAR, FOO，而不
+        是 BAR FOO,。当光标位于行尾时，它会将光标前的单词与下一行的第一个单词交换。
 
     C-o         在当前字符处输入换行符，创建一个新行，光标保持位置不变
     C-x C-o     将当前行后面的所有空行都删掉，如果当前行是空行则只保留当前空行并把前后的所有空行都删掉
