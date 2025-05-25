@@ -133,8 +133,45 @@ M-x 也对应着命令 execute-extended-command。 ::
     C-g C-/     撤销之后，可以按C-g改变撤销的方向，相当于重做（redo），当所有的都重
                 做之后，它又会自动改变方向进行撤销（undo）
 
-文件和窗口
-----------
+文件缓冲
+--------
+
+文件操作命令汇总： ::
+
+    快捷键              对应命令名                  操作描述
+    f10                 M-x menu-bar-open           下拉菜单栏，仅命令行终端
+    M-~                 M-x tmm-menu                互动菜单，命令行终端和图形界面都适用
+    C-x C-f <file>      M-x find-file               打开文件或创建一个新文件打开
+    C-x C-s             M-x save-buffer             保存文件
+    C-x C-r <file>      M-x find-file-read-only     只读打开
+    C-x C-v <file>      M-x find-alternate-file     打开与当前文件名称相近的文件
+    C-x C-q             M-x read-only-mode          将当前文件设置为只读模式
+    C-x b <file>        M-x switch-to-buffer        切换到对应的文件缓冲
+    C-x b               M-x switch-to-buffer        默认的两个文件缓冲相互切换
+    C-x C-b             M-x list-buffers            显式文件缓冲列表，让用户选择
+        p n                                         上一行，下一行
+        q                                           退出列表
+        d                                           标记一个文件缓冲打算关闭
+        s                                           标记一个文件缓冲打算保存
+        u                                           取消一个文件缓冲标记
+        x                                           执行刚刚标记过的删除和保存操作
+    C-x o               M-x other-window            如果当前光标没在 *Buffer List*，可用该命令切入
+    C-<mouse-1>         M-x mouse-buffer-menu       通过鼠标左键菜单切换缓冲
+    C-x k               M-x kill-buffer             关闭文件缓冲
+    C-x C-f <dir>                                   打开目录或创建一个新目录打开
+    C-x C-j                                         打开当前文件的目录
+        h                                           目录编辑器帮助（directory editor, dired），dired 会把目录下的文件都列出，
+                                                    随后用户可以对文件进行操作，可以删除文件、拷贝文件、对比文件、更改权限等等。
+                                                    可以看帮助中的 Keybindings 了解 Dired 中可以使用的命令。
+        p n                                         光标上下移动到相应的文件上，然后使用命令快捷键对该文件进行操作
+        m                                           标记一个文件
+        u                                           取消文件选择
+        d                                           标记删除
+        x                                           执行操作
+        i               dired-maybe-insert-subdir   将对应的子目录显式到当前缓冲，如果已经存在则光标移动到该子目录
+        ^                                           回到父目录
+        l               dired-do-redisplay          刷新目录内容
+        r <new-name>                                重命名或移动文件
 
 Emacs 界面的一些术语：
 
@@ -170,9 +207,6 @@ Emacs 界面的一些术语：
 **Point**
     光标所在的位置称为 Point。区别于光标的是，光标有且只有一个，但 Point 是针对
     Buffer 的，每个 Buffer 都有一个 Point。许多命令的触发都要读取 Point 信息。
-
-文件缓冲
-~~~~~~~~
 
 命令行可以使用 emacs <filename> 的方式来打开文件，而想要在 Emacs 内打开一个文件，
 按下 C-x C-f （find-file），此时 Echo area 会出现 “Find file: ”，后面为一个路径，
@@ -242,48 +276,6 @@ subdir 按下 i 来展开这个子目录，随后对两个文本文件按下 m �
 在回显区输入 path/to/subdir/，按下回车。这里熟悉 Linux 的读者应该清楚，移动文件的本
 质就是重命名（Rename），所以 Dired 里没有所谓的“移动”这个操作，而只有重命名。
 
-窗口分隔
-~~~~~~~~
-
-想要同时打开两个文件相互参照对比是一个再常见不过的需求，Emacs 自然可以做到。 ::
-
-    C-x o       将光标切换到下一个 Window。
-    C-x 0       关闭光标所在 Window。
-    C-x 1       只保留光标所在 Window，关闭其它 Window。其它 Window 的 Buffer 依然
-                没有关闭，可以通过 "Buffer List" 查看。
-    C-x 2       上下分割出两个 Window。
-    C-x 3       左右分割出两个 Window。
-    C-x 4 f     在另一个窗口打开文件。
-    C-x 4 b     在另一个窗口切换到另一缓冲。
-    C-x 4 d     在另一个窗口打开目录。
-    C-M-v       第二个窗口向下翻页。
-    C-M-S-v     第二个窗口向上翻页。
-    C-x 5 2     打开一个新 Frame。
-    C-x 5 f     在另一个界面打开文件。
-
-分割后，默认会把当前的 Buffer 也显示到新 Window。再次强调一下，Buffer 对应真正打开的
-文件，而 Window 是把 Buffer 显示出来的元件，所以一个文件只会开一个 Buffer，但可以有
-多个 Window 显示。于是，在新的 Window 里用 C-x C-f 打开另一个文件即可看到两个文件了，
-当然也可以正常用上面所说的 Buffer 切换。既然打开一个新的窗口并打开新的文件是很常见的需
-求，对此如果只有以上快捷键，需要先 C-x 3 分割出一个窗口，C-x o 切换到新窗口，C-x C-f
-打开新文件，过于繁琐。所以 Emacs 提供了一个快捷键：C-x 4 f 来达到“在另一个窗口打开新
-的文件，如果只有一个窗口就分割成两个”的效果。
-
-此外还有 C-x 4 b 表示“在另一个窗口切换到另一 Buffer，如果只有一个窗口就分割成两个” 。
-C-x 4 d 表示 “在另一个窗口打开目录，如果只有一个窗口就分割成两个”。可以总结出 C-x 4
-为前缀时，表达的是“在另一个窗口打开……”的意思。
-
-在打开两个窗口时，如果我们光标在第一个窗口，而希望第二个窗口翻页，那么就可以用 C-M-v
-向下翻页。用 C-M-S-v （同时按下 Control，Meta，Shift 和 v）向上翻页。
-
-那么如果在已经分割之后再分割呢？Emacs 会继续做二等分，变成 3 个、4 个等窗口。此时窗口
-的切换和关闭就没有那么方便了。通过插件 ace-window 可以辅助这一过程。
-
-既然能多 Window，自然能多个 Frame。打开一个新的 Frame 可以使用快捷键 C-x 5 2。在一个
-新的 Frame 打开文件，可以使用快捷键 C-x 5 f。C-x 5 和 C-x 4 基本类似，只是前者在
-Frame 间操作，后者在 Window 间操作。笔者的日常使用中，对多文件的打开更偏爱在单个
-Frame 中用多个 Window，很少在多 Frame 中间频繁切换。
-
 缓冲模式
 ~~~~~~~~
 
@@ -321,6 +313,48 @@ text-mode 中启动次模式“检查拼写” flyspell-mode，可以这样进�
 可以为 prog-mode-hook 挂上相应功能就行。 ::
 
     (add-hook 'prog-mode-hook #'hs-minor-mode)
+
+窗口分割
+--------
+
+想要同时打开两个文件相互参照对比是一个再常见不过的需求，Emacs 自然可以做到。 ::
+
+    C-x o       other-window                    将光标切换到下一个 Window
+    C-x 0       delete-window                   关闭光标所在 Window
+    C-x 1       delete-other-window             只保留光标所在 Window，关闭其它 Window。其它 Window 的
+                                                Buffer 依然没有关闭，可以通过 "Buffer List" 查看
+    C-x 2       split-window-below              上下分割出两个 Window
+    C-x 3       split-window-right              左右分割出两个 Window
+    C-x 4 f     find-file-other-window          在另一个窗口打开文件
+    C-x 4 b     switch-to-buffer-other-window   在另一个窗口切换到另一缓冲
+    C-x 4 d     dired-other-window              在另一个窗口打开目录
+    C-M-v       scroll-other-window             第二个窗口向下翻页
+    C-M-S-v     scroll-other-window-down        第二个窗口向上翻页
+    C-x 5 2     make-frame-command              打开一个新 Frame
+    C-x 5 f     find-file-other-frame           在另一个界面打开文件
+
+分割后，默认会把当前的 Buffer 也显示到新 Window。再次强调一下，Buffer 对应真正打开的
+文件，而 Window 是把 Buffer 显示出来的元件，所以一个文件只会开一个 Buffer，但可以有
+多个 Window 显示。于是，在新的 Window 里用 C-x C-f 打开另一个文件即可看到两个文件了，
+当然也可以正常用上面所说的 Buffer 切换。既然打开一个新的窗口并打开新的文件是很常见的需
+求，对此如果只有以上快捷键，需要先 C-x 3 分割出一个窗口，C-x o 切换到新窗口，C-x C-f
+打开新文件，过于繁琐。所以 Emacs 提供了一个快捷键：C-x 4 f 来达到“在另一个窗口打开新
+的文件，如果只有一个窗口就分割成两个”的效果。
+
+此外还有 C-x 4 b 表示“在另一个窗口切换到另一 Buffer，如果只有一个窗口就分割成两个” 。
+C-x 4 d 表示 “在另一个窗口打开目录，如果只有一个窗口就分割成两个”。可以总结出 C-x 4
+为前缀时，表达的是“在另一个窗口打开……”的意思。
+
+在打开两个窗口时，如果我们光标在第一个窗口，而希望第二个窗口翻页，那么就可以用 C-M-v
+向下翻页。用 C-M-S-v （同时按下 Control，Meta，Shift 和 v）向上翻页。
+
+那么如果在已经分割之后再分割呢？Emacs 会继续做二等分，变成 3 个、4 个等窗口。此时窗口
+的切换和关闭就没有那么方便了。通过插件 ace-window 可以辅助这一过程。
+
+既然能多 Window，自然能多个 Frame。打开一个新的 Frame 可以使用快捷键 C-x 5 2。在一个
+新的 Frame 打开文件，可以使用快捷键 C-x 5 f。C-x 5 和 C-x 4 基本类似，只是前者在
+Frame 间操作，后者在 Window 间操作。笔者的日常使用中，对多文件的打开更偏爱在单个
+Frame 中用多个 Window，很少在多 Frame 中间频繁切换。
 
 Emacs Lisp
 -----------
@@ -362,6 +396,7 @@ Emacs Lisp 源码文件的后缀名是 .el。分号（;）以后的内容是注�
 * https://github.com/purcell/emacs.d
 * https://github.com/nickav/naysayer-theme.el
 * https://github.com/pixlark/JonathanBlowEmacsTheme
+* https://www.emacswiki.org/emacs/Face
 
 配置文件是一个包含了 Emacs Lisp 源码的文件，描述了 Emacs 应当以什么样的方式启动。在
 Emacs 启动的时候会执行其中的代码，可以理解为启动时刻运行的脚本。当启动 Emacs 时，
@@ -496,15 +531,13 @@ require 命令可以导入并执行其他源码文件，例如我们可以创建
 码”的含义，这样这段代码立刻就会生效了。当然，还有 M-x eval-buffer 可以直接重新执行当
 前 Buffer 的所有代码。
 
-外观主题
---------
+自动配置
+~~~~~~~~~
 
-* https://www.emacswiki.org/emacs/Face
-
-Emacs 中掌管显示的专用名词是 Face，例如对文字来说，其字体、字号、颜色、背景都称为
-Face。想要配置 Face，输入命令 M-x customize-face 然后输入相应的 Face 名称即可自定
-义。例如，我们想更改光标的颜色，可以输入 "cursor"。当前界面下所有的 Face 的名字及颜
-色可以在界面中输入 M-x list-faces-display 列出。
+以外观自动配置为例，Emacs 中掌管显示的专用名词是 Face，例如对文字来说，其字体、字号、
+颜色、背景都称为Face。想要配置 Face，输入命令 M-x customize-face 然后输入相应的 Face
+名称即可自定义。例如，我们想更改光标的颜色，可以输入 "cursor"。当前界面下所有的 Face
+的名字及颜色可以在界面中输入 M-x list-faces-display 列出。
 
 “Cursor face:“ 后面一块矩形是 Emacs 中光标方块的颜色。下面的 “State” 表示这个 Face
 是被谁设置了， “THEMED” 表示光标颜色由主题指定；如果从未配置会显示 “STANDARD”，即
@@ -579,9 +612,6 @@ Emacs 会将 user-emacs-directory 设置为它决定使用的目录。此目录�
 用户特定的 Emacs 文件，例如 custom-file（Saving Customizations）、the saved
 desktop（Saving Emacs Sessions）等。命令行选项 --init-directory 会覆盖上述在查找
 你的用户初始化文件过程中确定的 user-emacs-directory 的值。
-
-保存自定义配置
-~~~~~~~~~~~~~~
 
 In the customization buffer, you can save a customization setting by choosing
 the ‘Save for Future Sessions’ choice from its ‘[State]’ button. The C-x C-s
