@@ -86,6 +86,9 @@ M-x 也对应着命令 execute-extended-command。
 
     M-x version
     M-x list-packages
+    M-x set-variable
+    M-x customize
+    M-x customize-face
     M-x customize-themes
     M-x help-with-turorial-spec-language
     M-x duplicate-line
@@ -642,12 +645,31 @@ require 命令可以导入并执行其他源码文件，例如我们可以创建
 自动配置
 ~~~~~~~~~
 
+除了手动修改配置文件，Emacs 还提供了一种更为方便的办法来管理可配置变量（customizable
+variables），或称为用户选项（user options）。最简单的进入方式是输入 M-x customize
+命令。
+
+变量是分组（group）管理的，只需要点进去寻找或搜索相关的变量就可以进行设置。对于每一个
+变量，点左侧的箭头展开内容，可以看到有的变量是 Toggle 按钮表示可以设定 true/false，
+有的则是取值列表，可以设定值。修改后，State 会显示已编辑。最后点击上方的 Apply 就是
+应用更改。点击 Revert 可以放弃更改等。按 q 退出。
+
+此外，使用 Emacs 的过程中也可以临时修改某个变量的值，M-x set-variable 可以输入变量
+名、回车、输入值、回车实现修改。还可以用 C-h v 输入变量名来查看变量的帮助信息。
+
+因此总的来说，想要设定变量有三种途径：手动修改配置文件 (setq name value)；customize
+中设定；运行过程中临时修改 M-x set-variable。需要再强调一下的是一定要区分命令和变量。
+这里笔者所指的 “命令” 是带有 (interactive) 的函数。例如上文举例的 hello-world 函数，
+这种函数可以通过 M-x 输入函数名进行调用。命令是可以执行的，而变量只是保存一个值，不可
+以执行。
+
 以外观自动配置为例，Emacs 中掌管显示的专用名词是 Face，例如对文字来说，其字体、字号、
 颜色、背景都称为Face。想要配置 Face，输入命令 M-x customize-face 然后输入相应的 Face
-名称即可自定义。例如，我们想更改光标的颜色，可以输入 "cursor"。当前界面下所有的 Face
-的名字及颜色可以在界面中输入 M-x list-faces-display 列出。
+名称即可自定义。例如，我们想更改光标的颜色，可以输入 cursor（或通过 M-x customize
+-> Faces -> Basic Faces -> Cursor 进入）。当前界面下所有的 Face 的名字及颜色可以在
+界面中输入 M-x list-faces-display 列出。
 
-“Cursor face:“ 后面一块矩形是 Emacs 中光标方块的颜色。下面的 “State” 表示这个 Face
+“Cursor face:” 后面一块矩形是 Emacs 中光标方块的颜色。下面的 “State” 表示这个 Face
 是被谁设置了， “THEMED” 表示光标颜色由主题指定；如果从未配置会显示 “STANDARD”，即
 “标准”，也就是默认的标准颜色。再下面是一段对这个 Face 的介绍。最后是可以配置的属性
 （Attribute），属性有很多，但只展示配置过的属性，对于 Cursor 来说，主要就是背景颜色，
@@ -660,8 +682,8 @@ Attributes” 可以列出所有属性，包括字体、字号、加粗、斜体
 支持显示很多颜色。建议读者首先使用较为现代的终端程序，并且打开其中的色彩选项，例如
 “xterm-256” 之类的。
 
-当保存了上述自定义配置后，默认会在初始化文件（如 ~/.emacs.d/init.el ）的末尾添加一段
-代码，类似： ::
+当设置的变量保存后，Emacs 会自动将一些配置代码加入到 init.el 配置文件的末尾，或是加入
+到自定义的配置文件中（custom-file），类似： ::
 
     (custom-set-variables
      ;; custom-set-variables was added by Custom.
@@ -676,20 +698,20 @@ Attributes” 可以列出所有属性，包括字体、字号、加粗、斜体
       ; 一些 Face 配置
     ))
 
-正如注释中所言，这段代码是由 Custom 系统自动维护的，读者轻易不要手动修改，否则会导致
-混乱。Custom 如此修改初始化文件，把初始化文件弄的不美观了；或者如果用户有时候在本机使
-用图形界面 Emacs，有时候在服务器上使用命令行 Emacs，二者希望进行不同的 Custom 设置但
-又不想维护两组 Emacs 配置，该如何操作呢？
+正如注释中所言，这段代码是由 Emacs Custom 系统自动维护的，读者轻易不要手动修改，否则
+会导致混乱。Custom 如此修改初始化文件，把初始化文件弄的不美观了；或者如果用户有时候在
+本机使用图形界面 Emacs，有时候在服务器上使用命令行 Emacs，二者希望进行不同的 Custom
+设置但又不想维护两组 Emacs 配置，该如何操作呢？
 
-事实上，比如建一个 ~/.emacs.d/custom.el 文件，把上方的代码块完全剪切到其中，然后在配
-置文件如 ~/.emacs.d/init.el 中写入： ::
+事实上可以配置这个文件，比如建文件 ~/.emacs.d/custom.el，把上方的代码块完全剪切到其
+中，然后在初始配置文件如 ~/.emacs.d/init.el 中写入： ::
 
     (setq custom-file "~/.emacs.d/custom.el")
     (load custom-file)
 
-这里设置变量 custom-file 改成我们自定义的文件名，然后加载这个文件，即可让 Custom 不再
-干扰我们的 ~/.emacs.d/init.el 文件，而把改动都写入 ~/.emacs.d/custom.el。还可以例如
-新建一个 ~/.emacs.d/lisp/init-theme.el 文件，把这两句代码写进去，然后在
+这里将变量 custom-file 改成我们自定义的文件名，然后加载这个文件，即可让 Custom 不再
+干扰我们的 ~/.emacs.d/init.el 文件，而把改动都写入 ~/.emacs.d/custom.el。还可以比
+如新建一个 ~/.emacs.d/lisp/init-theme.el 文件，把这两句代码写进去，然后在
 ~/.emacs.d/init.el 中 require 导入。 ::
 
     (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory)) ; 添加文件加载路径
@@ -756,8 +778,38 @@ time, add the following to your initialization file: ::
     (add-hook 'kill-emacs-query-functions
         'custom-prompt-customize-unsaved-options)
 
+配置快捷键
+----------
+
+使用以下函数可以配置自己的全局快捷键： ::
+
+    (global-set-key (kbd <KEY>) <FUNCTION>)
+
+其中 <KEY> 和 <FUNCTION> 替换为你想要设置的快捷键和功能。<FUNCTION> 如果设成 nil 相
+当于解绑快捷键的设定。例如： ::
+
+    (global-set-key (kbd "RET") 'newline-and-indent) ; 修改回车键为“新起一行并做缩进”
+    (global-set-key (kbd "M-w") 'kill-region) ; 交换 M-w 和 C-w，M-w 为剪切
+    (global-set-key (kbd "C-w") 'kill-ring-save) ; 交换 M-w 和 C-w，C-w 为复制
+    (global-set-key (kbd "C-a") 'back-to-indentation) ; 交换 C-a 和 M-m，C-a 为到缩进后的行首
+    (global-set-key (kbd "M-m") 'move-beginning-of-line) ; 交换 C-a 和 M-m，M-m 为到真正的行首
+    (global-set-key (kbd "C-c '") 'comment-or-uncomment-region) ; 为选中的代码加注释/去注释
+    (defun prev-ten-lines()
+        "Move cursor 10 lines backward"
+        (interactive)
+        (previous-line 10))
+    (defun next-ten-lines()
+        "Move cursor 10 lines forward"
+        (interactive)
+        (next-line 10))
+    (global-set-key (kbd "M-p") 'prev-ten-lines) ; 光标向前移动 10 行
+    (global-set-key (kbd "M-n") 'next-ten-lines) ; 光标向后移动 10 行
+    (global-set-key (kbd "C-j") nil) ; 解绑本来的 C-j 快捷键，让其也成为了一个前缀
+    ;; 删去光标所在行（在图形界面时可以用 "C-S-<DEL>"，终端常会拦截这个按法)
+    (global-set-key (kbd "C-j C-k") 'kill-whole-line)
+
 配置主题
-~~~~~~~~
+--------
 
 * https://emacsthemes.com/
 * https://github.com/topics/emacs-theme
