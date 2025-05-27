@@ -86,8 +86,11 @@ M-x 也对应着命令 execute-extended-command。
 
     M-x version
     M-x list-packages
+    M-x package-install
+    M-x package-delete
     M-x set-variable
     M-x customize
+    M-x customize-variable
     M-x customize-face
     M-x customize-themes
     M-x help-with-turorial-spec-language
@@ -119,6 +122,7 @@ M-x 也对应着命令 execute-extended-command。
     C-x C-c     退出 Emacs
     C-g         取消当前输入的命令，或当前执行过久的或失去响应的命令
     C-x k       在Emacs启动后，关掉初始页会自动开启一个 *scratch* 文件缓冲
+    C-M-x       eval-defun，执行当前函数
     C-x C-e     执行当前光标行代码
     C-j         在 lisp 主模式下执行代码并打印
     M-:         在 minibuffer 中执行代码
@@ -145,6 +149,8 @@ M-x 也对应着命令 execute-extended-command。
     M-r         光标移动到当前窗口中间行的行首，开始行的行首，结尾行的行首
     C-l         将光标所在行滚动到窗口中央，窗口顶部，窗口底部
     C-v M-v     将下一页或上一页滚动到窗口顶部（PageDn/PageUp），下页开头会保留上页最后两行内容
+    C-M-v       第二个窗口向下翻页（C-M- 需要按同一侧的两个键）
+    C-M-S-v     第二个窗口向上翻页（C-M-S 需要按同一侧的三个键）
 
     M-8 C-p     光标向上移动八行
     M-8 C-n     光标向下移动八行
@@ -188,7 +194,9 @@ M-x 也对应着命令 execute-extended-command。
 
     DEL M-DEL   删除光标左边一个字符或单词，<DEL> 即退格键（backspace），不是键盘上的 delete 键
     C-d M-d     删除光标右边一个字符或单词
+    C-S-DEL     移除光标所在行，图形界面可以用这个快捷键，但终端常会拦截这个按键只会执行<DEL>
     C-k         移除右侧直到行尾，再按一次移除换行符
+    C-u 3 C-k   移除光标右侧开始的3行，包括3个换行符
     M-k         移除右侧直到句尾，连续按继续移除下一句
     C-SPC       把光标移动到某处，按下 C-SPC 打一个标记，然后任意移动光标可以看到半透明的选择框。
                 这和使用鼠标进行选择是一样的，按 C-g 可以取消选择。注意，C-<SPC> 往往被中文用户
@@ -807,6 +815,104 @@ time, add the following to your initialization file: ::
     (global-set-key (kbd "C-j") nil) ; 解绑本来的 C-j 快捷键，让其也成为了一个前缀
     ;; 删去光标所在行（在图形界面时可以用 "C-S-<DEL>"，终端常会拦截这个按法)
     (global-set-key (kbd "C-j C-k") 'kill-whole-line)
+
+插件和包管理
+------------
+
+Emacs 的插件都被放在了一些固定的仓库网站上，就好像手机的应用商店一样，区别是 Emacs 所
+使用的仓库是可以自由配置的，我们只需要把仓库的地址告诉 Emacs 就可以了。Emacs 最大的插
+件仓库是 MELPA，此外也有一个默认仓库 GNU ELPA。
+
+* https://elpa.gnu.org/packages/index.html
+* https://elpa.nongnu.org/nongnu/
+* https://melpa.org/#/getting-started
+
+只需以下几行配置代码，就可以把仓库地址 https://melpa.org/packages/ 存储到
+package-archives 列表中，并命名为 “melpa”。 ::
+
+    (require 'package)
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+    ;; Comment/uncomment this line to enable MELPA Stable if desired. See `package-archive-priorities`
+    ;; and `package-pinned-packages`. Most users will not need or want to do this.
+    ;;(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+    (package-initialize)
+
+由于国内网络问题，直接访问速度较慢，可以使用腾讯镜像。腾讯镜像中，除了 MELPA，第一条的
+"gnu" 对应着的就是默认的 GNU ELPA，部分包是只在 GNU ELPA 上的。这里的配置意为：设置
+两个插件仓库，一个叫 gnu，一个叫 melpa。 ::
+
+    (require 'package)
+    (setq package-archives
+      '(("gnu" . "http://mirrors.cloud.tencent.com/elpa/gnu/")
+        ("melpa" . "http://mirrors.cloud.tencent.com/elpa/melpa/")))
+    (package-initialize)
+
+随后重启 Emacs 后，输入命令 package-list-packages 就可以列出来仓库中的所有插件，可以
+选中相应的插件，会弹出介绍的界面和安装按钮。此外，还可以直接通过命令 package-install，
+按下回车后，输入插件名就可以安装相应插件。
+
+package-list-packages 列表界面下，可以按 h 显示帮助，提示怎样操作包列表。默认情况下，
+插件会被安装到 ~/.emacs.d/elpa/ 目录下。想要删除已安装的插件，输入命令
+package-delete，然后输入已安装的插件名即可。
+
+通常各种插件都会发布到 GitHub 上，一般在上面都会介绍如何配置这个插件。但插件逐渐多了我
+们会发现，不同插件的使用、配置常常不同，一一配置会使得配置文件很乱，且不易管理，并且缺
+少一些自动化的配置机制。
+
+可以使用一个方便的插件 use-package 来进行管理。use-package 是一个默认可用的代码包，
+源代码位于 Emacs 安装目录下的 share\emacs\<version>\lisp\use-package 中。在启动
+Emacs 的时候首先加载 use-package 插件，随后我们再使用 use-package 插件来管理所有其
+它插件。 ::
+
+    ;; This is only needed once, near the top of the file
+    (eval-when-compile
+        (require 'use-package))
+
+use-package 的用法可参考帮助文档，以下是一些简单用法： ::
+
+    (use-package foo    ; 加载代码包 foo，前提是该代码包已经安装在你的系统上
+        :ensure t       ; 如果添加了这行代码，没有安装的话会自动根据ELPA仓库进行安装
+        :init           ; init 关键字指定在代码包加载之前执行的代码
+        (setq foo-variable t)
+        :config         ; config 关键字指定在代码包加载之后执行的代码
+        (foo-mode 1)
+        :bind           ; 绑定快捷键，可以接收一个 cons 或一个列表（conses）
+        (("M-o r" . highlight-regexp)
+         ("M-o w" . highlight-phrase)))
+
+一个插件代码包，可以使用 package-install 进行安装，或使用 use-package 的 :ensure
+关键字自动安装。常用插件列表： ::
+
+    https://github.com/DarwinAwardWinner/ido-completing-read-plus
+    ido amx     全方位文本补全和M-x补全
+
+    https://github.com/abo-abo/ace-window
+    ace-window  方便多窗口切换
+
+    https://github.com/alezost/mwim.el
+    mwim        方便行首尾的光标移动
+
+    https://www.emacswiki.org/emacs/UndoTree
+    undo-tree   显示文本编辑历史树方便撤销操作
+
+    https://github.com/justbur/emacs-which-key
+    which-key   快捷键提示，按 C-h 然后 n/p 可以翻页
+
+    https://github.com/abo-abo/avy
+    https://karthinks.com/software/avy-can-do-anything/
+    avy         光标快速跳转
+
+    其操作逻辑的抽象概念，也是很多 Emacs 命令使用的逻辑：Filter（筛选）、Select
+    （选择）、Act（行动）。举个例子，我们按 C-x C-f 打开文件，此时列出了当前目录下
+    所有文件名，按下文件名的前缀，待选文件的范围就会缩小；我们在其中最终选择了一个
+    文件；最后按下回车，此时 Emacs 就会打开并切换到那个文件。
+
+    事实上，当我们筛选后、选择前，还可以更改 avy 的行动，有哪些行动呢？读者可以输入
+    部分文本后，按下 ? 键，就会显示出 avy 当前支持的行动。包括：
+    Y: yank-line    粘贴行
+    X: kill-stay    隔空剪切文本
+    t: teleport     把远处的文本传送到当前位置
+    avy-copy-line avy-move-line avy-copy-region avy-move-region
 
 配置主题
 --------
