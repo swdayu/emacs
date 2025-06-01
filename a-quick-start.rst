@@ -90,6 +90,7 @@ M-x 也对应着命令 execute-extended-command。
     M-x package-delete
     M-x set-variable
     M-x customize
+    M-x customize-group
     M-x customize-variable
     M-x customize-face
     M-x customize-themes
@@ -162,7 +163,9 @@ M-x 也对应着命令 execute-extended-command。
 
 文本搜索： ::
 
-    C-s         光标位置向后搜索，输入内容光标会自动移动到第一个匹配位置，再按 C-s 继续匹配下一个位置
+    C-s         光标位置向后搜索，输入内容光标会自动移动到第一个匹配位置（不会搜索整个文件，不方便）
+                C-s 继续匹配下一个位置
+                C-r 回到上一个匹配位置
                 RET 停留在当前匹配位置
                 C-g 取消这次搜索，回到搜索前的位置
     C-M-s       使用正则表达式向后搜索
@@ -191,7 +194,17 @@ M-x 也对应着命令 execute-extended-command。
     C-x C-o     将当前行后面的所有空行都删掉，如果当前行是空行则只保留当前空行并把前后的所有空行都删掉
 
     M-l M-u M-c 将当前字符开始的单词，或后面一个单词，转成小写大写或首字母大写
-
+    M-% (M-S-5) 查找和替换 M-x query-replace
+    C-M-%       使用正则表达式查找 M-x query-replace-regexp
+        SPC/y   替换并移动到下一个
+        DEL/n   跳过并移动到下一个
+        !       替换剩余所有的匹配
+        ^       回到前一个匹配
+        u       撤销前一次替换
+        U       撤销所有的替换
+        e       编辑替换字符串
+        E       编辑替换字符串并带额外情况
+        RET/q   退出替换
     DEL M-DEL   删除光标左边一个字符或单词，<DEL> 即退格键（backspace），不是键盘上的 delete 键
     C-d M-d     删除光标右边一个字符或单词
     C-S-DEL     移除光标所在行，图形界面可以用这个快捷键，但终端常会拦截这个按键只会执行<DEL>
@@ -884,23 +897,24 @@ use-package 的用法可参考帮助文档，以下是一些简单用法： ::
 关键字自动安装。常用插件列表： ::
 
     https://github.com/DarwinAwardWinner/ido-completing-read-plus
-    ido amx     全方位文本补全和M-x补全
+    ido amx 全方位文本补全和M-x补全
 
     https://github.com/abo-abo/ace-window
-    ace-window  方便多窗口切换
+    ace-window 方便多窗口切换
 
     https://github.com/alezost/mwim.el
-    mwim        方便行首尾的光标移动
+    mwim 方便行首尾的光标移动
 
     https://www.emacswiki.org/emacs/UndoTree
-    undo-tree   显示文本编辑历史树方便撤销操作
+    https://www.dr-qubit.org/undo-tree.html
+    undo-tree 显示文本编辑历史树方便撤销操作
 
     https://github.com/justbur/emacs-which-key
-    which-key   快捷键提示，按 C-h 然后 n/p 可以翻页
+    which-key 快捷键提示，按 C-h 然后 n/p 可以翻页
 
     https://github.com/abo-abo/avy
     https://karthinks.com/software/avy-can-do-anything/
-    avy         光标快速跳转
+    avy 光标快速跳转
 
     其操作逻辑的抽象概念，也是很多 Emacs 命令使用的逻辑：Filter（筛选）、Select
     （选择）、Act（行动）。举个例子，我们按 C-x C-f 打开文件，此时列出了当前目录下
@@ -913,6 +927,107 @@ use-package 的用法可参考帮助文档，以下是一些简单用法： ::
     X: kill-stay    隔空剪切文本
     t: teleport     把远处的文本传送到当前位置
     avy-copy-line avy-move-line avy-copy-region avy-move-region
+
+    https://github.com/abo-abo/hydra
+    https://github.com/abo-abo/hydra/wiki
+    hydra 把一组特定场景的命令组织到一起，通过简单按键来进行调用。
+
+    (defhydra hydra-awesome (awesome-map awesome-binding awesome-plist)
+        awesome-docstring
+        awesome-head-1
+        awesome-head-2
+        awesome-head-3
+        ...)
+
+    (defhydra hydra-zoom (global-map "<f2>")
+        "zoom"
+        ("g" text-scale-increase "in")
+        ("l" text-scale-decrease "out"))
+
+    hydra-awesome: 如果给你的 hydra 命名为 hydra-awesome，defhydra 会返回结果 hydra-awesome/body
+    awesome-map: global-map
+    awesome-binding: "<f2>"
+    awesome-plist 可以是：
+        :pre (set-cursor-color "#40e0d0") ; 每个 head 运行之前执行
+        :post (progn (set-cursor-color "#ffffff") (message "Thank you, come again.")) ; body 之后执行
+        :exit 其值被每个 head 继承，但 head 可以继续设置自己的值，该值影响 head 在执行完命令之后是否退出 hydra
+            nil     默认值，hydra state 将会继续
+            t       hydra state 将会退出
+        :foreign-keys 其值属于 body，决定着在按一个不属于任何 head 关联的快捷键之后会做什么
+            nil     默认值，退出 hydra
+            warn    不会退出 hydra，报警告消息并且不会执行这个 foreign key
+            run     不会退出 hydra，并且尝试执行这个 foreign key
+        :color 是一个快捷方式，等价于将 :exit 和 :foreign-keys 组合一起使用，并且 head 会显示对应的颜色
+            red      两个都是默认值 - head 执行完命令继续，按未知快捷键退出
+            amaranth :foreign-keys warn 另一个是默认值 - head 执行完命令继续，按未知快捷键警告
+            pink     :foreign-keys run 另一个是默认值 - head 执行完命令继续，按未知快捷键尝试运行该快捷键
+            teal     :foreign-keys warn :exit t - head 执行完命令退出，按未知快捷键警告
+            blue     :exit t 另一个是默认值 - head 执行完命令退出，按未知快捷键退出
+        :timeout 启动一个对应秒数的计时器，时间到就会退出 hydra，但调用任何 head 会重新刷新计时器
+        :hint 其值被每个 head 继承，但 head 可以继续设置自己的值，只有一个有意义的值 :hint nil
+        :bind 提供一个 lambda 为每个 head 绑定键，每个 head 可以设置自己的 :bind key，这样可让一些 head 不绑定避免暴露到 hydra 之外
+        :base-map Use this option if you want to override hydra-base-map for the current hydra.
+    awesome-docstring 可以是一个简单字符串，或者字符串以换行符开始会启用键高亮和 Ruby 风格的字符串插值。
+        * 要高亮一个键，只需用下划线将其包裹起来。注意，该键必须属于某个头部之一。该键将根据其行为以适当的
+          颜色高亮显示，也就是说，如果按键会使 Hydra 退出，颜色将是蓝色。
+        * 要插入一个空字符，使用 ^。它的唯一用途是让你的代码和结果一样整齐。
+        * 要插入一个动态的 Elisp 变量，使用 % 后跟变量名。每当变量被 head 修改时文档字符串就会更新。可以
+          使用格式化样式的宽度说明符。
+        * 要插入一个动态的 Elisp 表达式，例如 %(length (dired-get-marked-files))。如果一个头部会改变
+          标记文件的数量，它就会被更新。
+        * 如果 Elisp 表达式的结果是一个字符串，并且你不想引号引用，使用这种形式：
+          %s(shell-command-to-string "du -hs")，这里动态显示磁盘使用情况。
+    awesome-head 的组成：(head-binding head-command head-hint head-plist)，例如上例中
+        head-binding: "g"
+        head-command: text-scale-increase，可以是一个函数、lambda、单个 sexp，或可设成 nil 表示退出 hydra
+        head-hint: "in"，如果不显示命令提示字符串可设为 nil
+        head-plist: nil，在 head 中可以覆盖的属性列表元素可以是 :exit :color :bind :column
+
+    :column 是一个字符串，用于按类别对头部进行分组。如果未定义此属性，则头部将继承前一个头部的类别。如果前面
+    头部都没有定义类别，则默认为 nil。当 Hydra 被实例化时，会生成一个文档字符串，将具有非空提示的相同类别的
+    头部按列排列。没有类别的头部（:column 值为 nil）将被安排在表格下方的一行中，或者如果 awesome-plist 指定
+    了 :columns <n> 属性（表示未分类别的头部排成几列），则会被安排在第二个表格中。此外，一个列名可以在任何头
+    部中出现多次。
+
+    https://github.com/magnars/multiple-cursors.el
+    multiple-cursors 多光标编辑，该插件提供了多种生成多光标的方式：
+    1. 连续多行 - 我们按下 C-SPC 触发一次 set-mark，随后让光标向下移动，再输入 M-x mc/edit-lines 就生成连续多行光标。
+    2. 编辑多处同一段文本 - 选中文本，输入命令 mc/mark-next-like-this、mc/mark-previous-like-this、
+       mc/mark-all-like-this，看名字就知道，分别可以标记下一个词、上一个词、所有词。还可以用
+       mc/skip-to-next-like-this 和 mc/skip-to-previous-like-this 跳过一部分。
+    3. 鼠标点击选择 - 见配置，将 mc/toggle-cursor-on-click 绑定到某个键位。比如使用的是 Ctrl + Shift + 鼠标左键。
+
+    (use-package multiple-cursors
+        :ensure t
+        :after hydra
+        :bind
+        (("C-x C-h m" . hydra-multiple-cursors/body)
+         ("C-S-<mouse-1>" . mc/toggle-cursor-on-click))
+        :hydra (hydra-multiple-cursors (:hint nil)
+        "
+        Up^^       Down^^      Miscellaneous      % 2(mc/num-cursors) cursor%s(if (> (mc/num-cursors) 1) \"s\" \"\")
+        ------------------------------------------------------------------
+        [_p_]  Prev   [_n_]  Next   [_l_] Edit lines [_0_] Insert numbers
+        [_P_]  Skip   [_N_]  Skip   [_a_] Mark all  [_A_] Insert letters
+        [_M-p_] Unmark  [_M-n_] Unmark  [_s_] Search   [_q_] Quit
+        [_|_] Align with input CHAR    [Click] Cursor at point"
+        ("l" mc/edit-lines :exit t)
+        ("a" mc/mark-all-like-this :exit t)
+        ("n" mc/mark-next-like-this)
+        ("N" mc/skip-to-next-like-this)
+        ("M-n" mc/unmark-next-like-this)
+        ("p" mc/mark-previous-like-this)
+        ("P" mc/skip-to-previous-like-this)
+        ("M-p" mc/unmark-previous-like-this)
+        ("|" mc/vertical-align)
+        ("s" mc/mark-all-in-region-regexp :exit t)
+        ("0" mc/insert-numbers :exit t)
+        ("A" mc/insert-letters :exit t)
+        ("<mouse-1>" mc/add-cursor-on-click)
+        ;; Help with click recognition in this hydra
+        ("<down-mouse-1>" ignore)
+        ("<drag-mouse-1>" ignore)
+        ("q" nil)))
 
 配置主题
 --------
