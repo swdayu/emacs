@@ -990,7 +990,8 @@ use-package 的用法可参考帮助文档，以下是一些简单用法： ::
     部中出现多次。
 
     https://github.com/magnars/multiple-cursors.el
-    multiple-cursors 多光标编辑，该插件提供了多种生成多光标的方式：
+    multiple-cursors 多光标编辑，该插件提供了多种生成多光标的方式。该代码包依赖于 cl-lib 代码包。
+    The package depends on the cl-lib package, cl-lib is common lisp extensions for emacs, it is a built-in package.
     1. 连续多行 - 我们按下 C-SPC 触发一次 set-mark，随后让光标向下移动，再输入 M-x mc/edit-lines 就生成连续多行光标。
     2. 编辑多处同一段文本 - 选中文本，输入命令 mc/mark-next-like-this、mc/mark-previous-like-this、
        mc/mark-all-like-this，看名字就知道，分别可以标记下一个词、上一个词、所有词。还可以用
@@ -1028,6 +1029,13 @@ use-package 的用法可参考帮助文档，以下是一些简单用法： ::
         ("<down-mouse-1>" ignore)
         ("<drag-mouse-1>" ignore)
         ("q" nil)))
+
+    ;; https://github.com/nschum/highlight-symbol.el
+    ;; highlight-symbol 高亮出当前 Buffer 中所有的、与光标所在处的符号相同的符号
+    (use-package highlight-symbol
+        :ensure t
+        :init (highlight-symbol-mode)
+        :bind ("<f3>" . highlight-symbol)) ;; 按下 F3 键就可高亮当前符号
 
 配置主题
 --------
